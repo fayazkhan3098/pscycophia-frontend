@@ -11,7 +11,7 @@ import { MessageBubble, type Message } from "./message-bubble"
 import { TypingIndicator } from "./typing-indicator"
 import { SuggestedQuestions } from "./suggested-questions"
 
-const API_URL = "https://pscycophia-production.up.railway.app"
+const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 const getAIResponse = async (question: string) => {
   const response = await fetch(`${API_URL}/query`, {
