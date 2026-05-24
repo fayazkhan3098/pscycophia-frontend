@@ -18,7 +18,6 @@ export function ChatInterface() {
   const [isTyping, setIsTyping] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [conversationId, setConversationId] = useState<string | undefined>()
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -43,17 +42,12 @@ export function ChatInterface() {
     setIsTyping(true)
 
     try {
-      const response = await sendChatMessage(content, conversationId)
-      
-      // Update conversation ID if returned
-      if (response.conversation_id) {
-        setConversationId(response.conversation_id)
-      }
+      const response = await sendChatMessage(content)
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: response.response || response.error || "I apologize, but I couldn't generate a response. Please try again.",
+        content: response.response || "I apologize, but I couldn't generate a response. Please try again.",
         sources: response.sources,
         fromCache: response.from_cache,
         feedback: null,
