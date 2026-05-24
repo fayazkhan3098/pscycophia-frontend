@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Menu, X } from "lucide-react"
+import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -26,6 +26,13 @@ const getAIResponse = async (question: string) => {
     fromCache: data.from_cache,
   }
 }
+
+export function ChatInterface() {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [isTyping, setIsTyping] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     if (scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]')
@@ -44,19 +51,29 @@ const getAIResponse = async (question: string) => {
     setMessages((prev) => [...prev, userMessage])
     setIsTyping(true)
 
-    // Simulate API delay
-    const response = await getAIResponse(content)
-    const assistantMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      role: "assistant",
-      content: response.content,
-      sources: response.sources,
-      fromCache: response.fromCache,
-      feedback: null,
+    try {
+      const response = await getAIResponse(content)
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: response.content,
+        sources: response.sources,
+        fromCache: response.fromCache,
+        feedback: null,
+      }
+      setMessages((prev) => [...prev, assistantMessage])
+    } catch (error) {
+      setMessages((prev) => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: "Sorry, something went wrong. Please try again.",
+        sources: [],
+        fromCache: false,
+        feedback: null,
+      }])
+    } finally {
+      setIsTyping(false)
     }
-
-    setMessages((prev) => [...prev, assistantMessage])
-    setIsTyping(false)
   }
 
   const handleFeedback = (id: string, feedback: "up" | "down") => {
@@ -69,10 +86,7 @@ const getAIResponse = async (question: string) => {
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Desktop Sidebar */}
       <Sidebar />
-
-      {/* Mobile Menu */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetTrigger asChild>
           <Button
@@ -88,10 +102,7 @@ const getAIResponse = async (question: string) => {
           <Sidebar />
         </SheetContent>
       </Sheet>
-
-      {/* Main Chat Area */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Chat Messages */}
         <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 md:p-6">
           <div className="mx-auto max-w-3xl">
             {messages.length === 0 ? (
@@ -110,8 +121,6 @@ const getAIResponse = async (question: string) => {
             )}
           </div>
         </ScrollArea>
-
-        {/* Input Area */}
         <ChatInput onSend={handleSend} disabled={isTyping} />
       </main>
     </div>
