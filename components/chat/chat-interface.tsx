@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Sidebar } from "./sidebar"
+import { Sidebar, SidebarContent } from "./sidebar"
 import { ChatInput } from "./chat-input"
 import { MessageBubble, type Message } from "./message-bubble"
 import { TypingIndicator } from "./typing-indicator"
@@ -98,8 +98,8 @@ export function ChatInterface() {
             <span className="sr-only">Open menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-72 p-0 bg-sidebar border-sidebar-border">
-          <Sidebar />
+        <SheetContent side="left" className="w-72 p-0 bg-sidebar border-sidebar-border flex flex-col">
+          <SidebarContent />
         </SheetContent>
       </Sheet>
 

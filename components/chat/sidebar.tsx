@@ -14,11 +14,12 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 
-export function Sidebar() {
+// Shared content for both desktop and mobile sidebars
+export function SidebarContent() {
   const [aboutOpen, setAboutOpen] = useState(false)
 
   return (
-    <aside className="hidden md:flex flex-col w-72 bg-sidebar border-r border-sidebar-border h-screen">
+    <>
       {/* Logo and Name */}
       <div className="p-4 flex items-center gap-3">
         <div className="rounded-lg bg-sidebar-primary/10 p-2">
@@ -157,6 +158,15 @@ export function Sidebar() {
           ))}
         </div>
       </div>
+    </>
+  )
+}
+
+// Desktop sidebar wrapper
+export function Sidebar() {
+  return (
+    <aside className="hidden md:flex flex-col w-72 bg-sidebar border-r border-sidebar-border h-screen">
+      <SidebarContent />
     </aside>
   )
 }
