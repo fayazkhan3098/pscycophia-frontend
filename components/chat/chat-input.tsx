@@ -41,7 +41,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   }
 
   return (
-    <div className="border-t border-border bg-background p-4">
+    <div className="shrink-0 border-t border-border bg-background p-4">
       <div className="mx-auto max-w-3xl">
         <div className="relative flex items-end gap-2 rounded-xl bg-secondary p-2">
           <Textarea

@@ -11,14 +11,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 
-export function Sidebar() {
+interface SidebarProps {
+  isMobile?: boolean
+}
+
+export function Sidebar({ isMobile = false }: SidebarProps) {
   const [aboutOpen, setAboutOpen] = useState(false)
 
   return (
-    <aside className="hidden md:flex flex-col w-72 bg-sidebar border-r border-sidebar-border h-screen">
+    <aside className={`${isMobile ? 'flex' : 'hidden md:flex'} flex-col ${isMobile ? 'w-full' : 'w-72'} bg-sidebar border-r border-sidebar-border ${isMobile ? 'min-h-full' : 'h-screen'}`}>
       {/* Logo and Name */}
       <div className="p-4 flex items-center gap-3">
         <div className="rounded-lg bg-sidebar-primary/10 p-2">
@@ -78,30 +81,28 @@ export function Sidebar() {
           <AlertTriangle className="h-3 w-3" />
           Limitations
         </h3>
-        <ScrollArea className="h-32">
-          <ul className="space-y-2 text-xs text-muted-foreground">
-            <li className="flex gap-2">
-              <span className="text-primary">•</span>
-              May occasionally generate inaccurate information
-            </li>
-            <li className="flex gap-2">
-              <span className="text-primary">•</span>
-              Cannot provide medical diagnoses
-            </li>
-            <li className="flex gap-2">
-              <span className="text-primary">•</span>
-              Not a replacement for professional therapy
-            </li>
-            <li className="flex gap-2">
-              <span className="text-primary">•</span>
-              Knowledge cutoff may affect recent research
-            </li>
-            <li className="flex gap-2">
-              <span className="text-primary">•</span>
-              Cannot handle crisis situations
-            </li>
-          </ul>
-        </ScrollArea>
+        <ul className="space-y-2 text-xs text-muted-foreground">
+          <li className="flex gap-2">
+            <span className="text-primary">•</span>
+            May occasionally generate inaccurate information
+          </li>
+          <li className="flex gap-2">
+            <span className="text-primary">•</span>
+            Cannot provide medical diagnoses
+          </li>
+          <li className="flex gap-2">
+            <span className="text-primary">•</span>
+            Not a replacement for professional therapy
+          </li>
+          <li className="flex gap-2">
+            <span className="text-primary">•</span>
+            Knowledge cutoff may affect recent research
+          </li>
+          <li className="flex gap-2">
+            <span className="text-primary">•</span>
+            Cannot handle crisis situations
+          </li>
+        </ul>
       </div>
       
       <Separator className="bg-sidebar-border" />

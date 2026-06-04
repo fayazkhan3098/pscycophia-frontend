@@ -10,6 +10,7 @@ import { ChatInput } from "./chat-input"
 import { MessageBubble, type Message } from "./message-bubble"
 import { TypingIndicator } from "./typing-indicator"
 import { SuggestedQuestions } from "./suggested-questions"
+import { useToast } from "@/hooks/use-toast"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -19,6 +20,11 @@ const getAIResponse = async (question: string) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query: question }),
   })
+  
+  if (!response.ok) {
+    throw new Error(`Server error: ${response.status}`)
+  }
+  
   const data = await response.json()
   return {
     content: data.answer,
@@ -32,10 +38,11 @@ export function ChatInterface() {
   const [isTyping, setIsTyping] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const { toast } = useToast()
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]')
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]')
       if (scrollContainer) {
         scrollContainer.scrollTop = scrollContainer.scrollHeight
       }
@@ -63,14 +70,11 @@ export function ChatInterface() {
       }
       setMessages((prev) => [...prev, assistantMessage])
     } catch (error) {
-      setMessages((prev) => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "Sorry, something went wrong. Please try again.",
-        sources: [],
-        fromCache: false,
-        feedback: null,
-      }])
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+        description: "Unable to get a response. Please try again.",
+      })
     } finally {
       setIsTyping(false)
     }
@@ -85,7 +89,7 @@ export function ChatInterface() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-[100dvh] bg-background overflow-hidden">
       <Sidebar />
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetTrigger asChild>
@@ -98,27 +102,31 @@ export function ChatInterface() {
             <span className="sr-only">Open menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-72 p-0 bg-sidebar border-sidebar-border">
-          <Sidebar />
+        <SheetContent side="left" className="w-72 p-0 bg-sidebar border-sidebar-border overflow-hidden">
+          <ScrollArea className="h-full">
+            <Sidebar isMobile />
+          </ScrollArea>
         </SheetContent>
       </Sheet>
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
-        <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 md:p-6">
-          <div className="mx-auto max-w-3xl">
-            {messages.length === 0 ? (
-              <SuggestedQuestions onSelect={handleSend} />
-            ) : (
-              <>
-                {messages.map((message) => (
-                  <MessageBubble
-                    key={message.id}
-                    message={message}
-                    onFeedback={handleFeedback}
-                  />
-                ))}
-                {isTyping && <TypingIndicator />}
-              </>
-            )}
+      <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <ScrollArea ref={scrollAreaRef} className="flex-1 min-h-0">
+          <div className="p-4 md:p-6">
+            <div className="mx-auto max-w-3xl">
+              {messages.length === 0 ? (
+                <SuggestedQuestions onSelect={handleSend} />
+              ) : (
+                <>
+                  {messages.map((message) => (
+                    <MessageBubble
+                      key={message.id}
+                      message={message}
+                      onFeedback={handleFeedback}
+                    />
+                  ))}
+                  {isTyping && <TypingIndicator />}
+                </>
+              )}
+            </div>
           </div>
         </ScrollArea>
         <ChatInput onSend={handleSend} disabled={isTyping} />
