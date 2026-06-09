@@ -36,8 +36,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark bg-background">
-      <body className="font-sans antialiased">
+    <html lang="en" className="dark bg-background min-h-screen">
+      <body className="font-sans antialiased h-screen overflow-hidden">
         {children}
         <Toaster />
         {process.env.NODE_ENV === 'production' && <Analytics />}
