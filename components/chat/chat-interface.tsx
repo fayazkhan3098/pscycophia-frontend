@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Menu } from "lucide-react"
+import { Menu, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -10,6 +10,7 @@ import { ChatInput } from "./chat-input"
 import { MessageBubble, type Message } from "./message-bubble"
 import { TypingIndicator } from "./typing-indicator"
 import { SuggestedQuestions } from "./suggested-questions"
+import { type Conversation } from "./conversation-item"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -31,6 +32,15 @@ export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([])
   const [isTyping, setIsTyping] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [conversations, setConversations] = useState<Conversation[]>([
+    { id: "1", title: "Understanding Anxiety", createdAt: new Date(Date.now() - 86400000) },
+    { id: "2", title: "CBT Techniques", createdAt: new Date(Date.now() - 172800000) },
+    { id: "3", title: "Stress Management", createdAt: new Date(Date.now() - 259200000) },
+    { id: "4", title: "Depression Symptoms", createdAt: new Date(Date.now() - 345600000) },
+    { id: "5", title: "Sleep Psychology", createdAt: new Date(Date.now() - 432000000) },
+  ])
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>("1")
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -84,45 +94,161 @@ export function ChatInterface() {
     )
   }
 
+  const handleNewChat = () => {
+    // Clear messages and prepare for new conversation
+    // Conversation will be created after first message is sent with a generated title
+    setSelectedConversationId(null)
+    setMessages([])
+    setMobileMenuOpen(false)
+  }
+
+  const handleSelectConversation = (id: string) => {
+    setSelectedConversationId(id)
+    setMessages([])
+    setMobileMenuOpen(false)
+  }
+
+  const handleDeleteConversation = (id: string) => {
+    setConversations((prev) => prev.filter((conv) => conv.id !== id))
+    if (selectedConversationId === id) {
+      const remaining = conversations.filter((conv) => conv.id !== id)
+      if (remaining.length > 0) {
+        setSelectedConversationId(remaining[0].id)
+      } else {
+        setSelectedConversationId(null)
+        setMessages([])
+      }
+    }
+  }
+
+  const handleRenameConversation = (id: string, newTitle: string) => {
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.id === id
+          ? { ...conv, title: newTitle, updatedAt: new Date() }
+          : conv
+      )
+    )
+  }
+
+  const handleDuplicateConversation = (id: string) => {
+    const conversation = conversations.find((c) => c.id === id)
+    if (conversation) {
+      const newId = Date.now().toString()
+      const newConversation: Conversation = {
+        ...conversation,
+        id: newId,
+        title: `${conversation.title} (Copy)`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+      setConversations((prev) => [newConversation, ...prev])
+    }
+  }
+
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
-      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetTrigger asChild>
+    <div className="flex h-screen min-h-screen overflow-hidden bg-background">
+      {!sidebarCollapsed && (
+        <Sidebar
+          className="hidden md:flex"
+          conversations={conversations}
+          selectedConversationId={selectedConversationId}
+          onNewChat={handleNewChat}
+          onSelectConversation={handleSelectConversation}
+          onDeleteConversation={handleDeleteConversation}
+          onRenameConversation={handleRenameConversation}
+          onDuplicateConversation={handleDuplicateConversation}
+        />
+      )}
+
+      {sidebarCollapsed && (
+        <aside className="hidden md:flex h-screen w-16 shrink-0 flex-col items-center justify-start border-r border-sidebar-border bg-sidebar px-2 py-4">
           <Button
             variant="ghost"
             size="icon"
-            className="fixed top-4 left-4 z-50 md:hidden"
+            onClick={() => setSidebarCollapsed(false)}
+            className="text-sidebar-foreground"
           >
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Open menu</span>
+            <ChevronRight className="h-5 w-5" />
+            <span className="sr-only">Expand sidebar</span>
           </Button>
-        </SheetTrigger>
+        </aside>
+      )}
+
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <div className="flex flex-1 flex-col min-h-0">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3 md:px-6">
+            <div className="flex items-center gap-2">
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden"
+                >
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </SheetTrigger>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hidden md:inline-flex"
+                onClick={() => setSidebarCollapsed((prev) => !prev)}
+              >
+                {sidebarCollapsed ? (
+                  <ChevronRight className="h-5 w-5" />
+                ) : (
+                  <ChevronLeft className="h-5 w-5" />
+                )}
+                <span className="sr-only">
+                  {sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                </span>
+              </Button>
+            </div>
+          </div>
+
+          <main className="flex-1 min-h-0 overflow-hidden">
+            <ScrollArea
+              ref={scrollAreaRef}
+              className="flex-1 min-h-0 h-full overflow-hidden p-4 pb-28 md:p-6 md:pb-28"
+            >
+              <div className="mx-auto max-w-3xl">
+                {messages.length === 0 ? (
+                  <SuggestedQuestions onSelect={handleSend} />
+                ) : (
+                  <>
+                    {messages.map((message) => (
+                      <MessageBubble
+                        key={message.id}
+                        message={message}
+                        onFeedback={handleFeedback}
+                      />
+                    ))}
+                    {isTyping && <TypingIndicator />}
+                    <div className="h-24 md:h-28" aria-hidden="true" />
+                  </>
+                )}
+              </div>
+            </ScrollArea>
+
+            <ChatInput onSend={handleSend} disabled={isTyping} />
+          </main>
+        </div>
+
         <SheetContent side="left" className="w-72 p-0 bg-sidebar border-sidebar-border">
-          <Sidebar />
+          <Sidebar
+            className="flex md:hidden"
+            conversations={conversations}
+            selectedConversationId={selectedConversationId}
+            onNewChat={handleNewChat}
+            onSelectConversation={handleSelectConversation}
+            onDeleteConversation={handleDeleteConversation}
+            onRenameConversation={handleRenameConversation}
+            onDuplicateConversation={handleDuplicateConversation}
+          />
         </SheetContent>
       </Sheet>
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
-        <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 md:p-6">
-          <div className="mx-auto max-w-3xl">
-            {messages.length === 0 ? (
-              <SuggestedQuestions onSelect={handleSend} />
-            ) : (
-              <>
-                {messages.map((message) => (
-                  <MessageBubble
-                    key={message.id}
-                    message={message}
-                    onFeedback={handleFeedback}
-                  />
-                ))}
-                {isTyping && <TypingIndicator />}
-              </>
-            )}
-          </div>
-        </ScrollArea>
-        <ChatInput onSend={handleSend} disabled={isTyping} />
-      </main>
     </div>
   )
 }

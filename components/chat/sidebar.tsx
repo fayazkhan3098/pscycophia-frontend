@@ -11,14 +11,106 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
+import { NewChatButton } from "./new-chat-button"
+import { ConversationList } from "./conversation-list"
+import { type Conversation } from "./conversation-item"
+import { DeleteConfirmationModal } from "./delete-confirmation-modal"
+import { ConversationDetailsModal } from "./conversation-details-modal"
+import { ShareModal } from "./share-modal"
 
-export function Sidebar() {
+interface SidebarProps {
+  className?: string
+  conversations?: Conversation[]
+  selectedConversationId?: string | null
+  onNewChat?: () => void
+  onSelectConversation?: (id: string) => void
+  onDeleteConversation?: (id: string) => void
+  onRenameConversation?: (id: string, title: string) => void
+  onDuplicateConversation?: (id: string) => void
+  onShareConversation?: (id: string) => void
+  messageCountByConversation?: Record<string, number>
+}
+
+const MOCK_CONVERSATIONS: Conversation[] = [
+  { id: "1", title: "Understanding Anxiety", createdAt: new Date(Date.now() - 86400000), updatedAt: new Date(Date.now() - 3600000) },
+  { id: "2", title: "CBT Techniques", createdAt: new Date(Date.now() - 172800000), updatedAt: new Date(Date.now() - 86400000) },
+  { id: "3", title: "Stress Management", createdAt: new Date(Date.now() - 259200000), updatedAt: new Date(Date.now() - 172800000) },
+  { id: "4", title: "Depression Symptoms", createdAt: new Date(Date.now() - 345600000), updatedAt: new Date(Date.now() - 259200000) },
+  { id: "5", title: "Sleep Psychology", createdAt: new Date(Date.now() - 432000000), updatedAt: new Date(Date.now() - 345600000) },
+]
+
+export function Sidebar({
+  className,
+  conversations = MOCK_CONVERSATIONS,
+  selectedConversationId,
+  onNewChat,
+  onSelectConversation,
+  onDeleteConversation,
+  onRenameConversation,
+  onDuplicateConversation,
+  onShareConversation,
+  messageCountByConversation = {},
+}: SidebarProps) {
   const [aboutOpen, setAboutOpen] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
+  const [conversationToDelete, setConversationToDelete] = useState<Conversation | null>(null)
+  const [conversationToView, setConversationToView] = useState<Conversation | null>(null)
+  const [conversationToShare, setConversationToShare] = useState<Conversation | null>(null)
+
+  // Handlers for conversation actions
+  const handleRenameConversation = (id: string, newTitle: string) => {
+    onRenameConversation?.(id, newTitle)
+  }
+
+  const handleDeleteConversation = (id: string) => {
+    const conv = conversations.find((c) => c.id === id)
+    if (conv) {
+      setConversationToDelete(conv)
+      setDeleteConfirmOpen(true)
+    }
+  }
+
+  const handleConfirmDelete = () => {
+    if (conversationToDelete) {
+      onDeleteConversation?.(conversationToDelete.id)
+      setDeleteConfirmOpen(false)
+      setConversationToDelete(null)
+    }
+  }
+
+  const handleDuplicateConversation = (id: string) => {
+    const conv = conversations.find((c) => c.id === id)
+    if (conv) {
+      onDuplicateConversation?.(id)
+    }
+  }
+
+  const handleShareConversation = (id: string) => {
+    const conv = conversations.find((c) => c.id === id)
+    if (conv) {
+      setConversationToShare(conv)
+      setShareOpen(true)
+      onShareConversation?.(id)
+    }
+  }
+
+  const handleViewConversationDetails = (id: string) => {
+    const conv = conversations.find((c) => c.id === id)
+    if (conv) {
+      setConversationToView(conv)
+      setDetailsOpen(true)
+    }
+  }
 
   return (
-    <aside className="hidden md:flex flex-col w-72 bg-sidebar border-r border-sidebar-border h-screen">
+    <aside className={cn(
+      "flex flex-col w-72 flex-shrink-0 bg-sidebar border-r border-sidebar-border min-h-0 overflow-y-auto",
+      className,
+    )}>
       {/* Logo and Name */}
       <div className="p-4 flex items-center gap-3">
         <div className="rounded-lg bg-sidebar-primary/10 p-2">
@@ -72,45 +164,63 @@ export function Sidebar() {
         </Dialog>
       </div>
       
-      {/* Limitations Section */}
-      <div className="px-4 pb-4">
-        <h3 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-          <AlertTriangle className="h-3 w-3" />
-          Limitations
-        </h3>
-        <ScrollArea className="h-32">
-          <ul className="space-y-2 text-xs text-muted-foreground">
-            <li className="flex gap-2">
-              <span className="text-primary">•</span>
-              May occasionally generate inaccurate information
-            </li>
-            <li className="flex gap-2">
-              <span className="text-primary">•</span>
-              Cannot provide medical diagnoses
-            </li>
-            <li className="flex gap-2">
-              <span className="text-primary">•</span>
-              Not a replacement for professional therapy
-            </li>
-            <li className="flex gap-2">
-              <span className="text-primary">•</span>
-              Knowledge cutoff may affect recent research
-            </li>
-            <li className="flex gap-2">
-              <span className="text-primary">•</span>
-              Cannot handle crisis situations
-            </li>
-          </ul>
-        </ScrollArea>
+      {/* Limitations + Chats */}
+      <div className="px-4 pb-4 space-y-4 flex-1 min-h-0 overflow-hidden flex flex-col">
+        <details className="group overflow-hidden rounded-3xl border border-border bg-card text-card-foreground flex-shrink-0">
+          <summary className="flex cursor-pointer items-center justify-between gap-2 px-4 py-3 text-sm font-semibold">
+            <span className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-primary" />
+              Limitations
+            </span>
+            <span className="text-xs text-muted-foreground transition-transform duration-200 group-open:-rotate-180">
+              ▼
+            </span>
+          </summary>
+          <div className="border-t border-border px-4 py-3 text-sm leading-6 text-muted-foreground">
+            <ul className="space-y-2">
+              <li className="flex gap-2">
+                <span className="text-primary">•</span>
+                May occasionally generate inaccurate information
+              </li>
+              <li className="flex gap-2">
+                <span className="text-primary">•</span>
+                Cannot provide medical diagnoses
+              </li>
+              <li className="flex gap-2">
+                <span className="text-primary">•</span>
+                Not a replacement for professional therapy
+              </li>
+              <li className="flex gap-2">
+                <span className="text-primary">•</span>
+                Knowledge cutoff may affect recent research
+              </li>
+              <li className="flex gap-2">
+                <span className="text-primary">•</span>
+                Cannot handle crisis situations
+              </li>
+            </ul>
+          </div>
+        </details>
+
+        <div className="flex flex-col min-h-0 overflow-hidden flex-1">
+          <NewChatButton onClick={onNewChat || (() => {})} className="flex-shrink-0" />
+          <ConversationList
+            conversations={conversations}
+            selectedId={selectedConversationId || null}
+            onSelect={onSelectConversation || (() => {})}
+            onDelete={handleDeleteConversation}
+            onRename={handleRenameConversation}
+            onDuplicate={handleDuplicateConversation}
+            onShare={handleShareConversation}
+            onViewDetails={handleViewConversationDetails}
+          />
+        </div>
       </div>
-      
-      <Separator className="bg-sidebar-border" />
-      
-      {/* Spacer */}
-      <div className="flex-1" />
+
+      <Separator className="bg-sidebar-border flex-shrink-0" />
       
       {/* Builder Info */}
-      <div className="p-4 border-t border-sidebar-border">
+      <div className="p-4 border-t border-sidebar-border flex-shrink-0">
         <h3 className="text-xs font-medium text-muted-foreground mb-3 flex items-center gap-1">
           <User className="h-3 w-3" />
           Built By
@@ -141,7 +251,7 @@ export function Sidebar() {
       </div>
       
       {/* Tech Stack */}
-      <div className="p-4 border-t border-sidebar-border">
+      <div className="p-4 border-t border-sidebar-border flex-shrink-0">
         <h3 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
           <Code className="h-3 w-3" />
           Tech Stack
@@ -157,6 +267,23 @@ export function Sidebar() {
           ))}
         </div>
       </div>
+
+      {/* Modals */}
+      <DeleteConfirmationModal
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        conversationTitle={conversationToDelete?.title || ""}
+        onConfirm={handleConfirmDelete}
+      />
+
+      <ConversationDetailsModal
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        conversation={conversationToView}
+        messageCount={conversationToView ? (messageCountByConversation[conversationToView.id] || 0) : 0}
+      />
+
+      <ShareModal open={shareOpen} onOpenChange={setShareOpen} />
     </aside>
   )
 }
