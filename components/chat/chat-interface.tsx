@@ -11,6 +11,7 @@ import { MessageBubble, type Message } from "./message-bubble"
 import { TypingIndicator } from "./typing-indicator"
 import { SuggestedQuestions } from "./suggested-questions"
 import { type Conversation } from "./conversation-item"
+import { createClient } from "@/lib/supabase/client"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -30,21 +31,17 @@ const getAIResponse = async (question: string) => {
 
 interface ChatInterfaceProps {
   userEmail: string
+  conversations: Conversation[]
 }
 
-export function ChatInterface({ userEmail }: ChatInterfaceProps) {
+export function ChatInterface({ userEmail, conversations:initialConversations }: ChatInterfaceProps) {
+  const supabase = createClient()
   const [messages, setMessages] = useState<Message[]>([])
   const [isTyping, setIsTyping] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [conversations, setConversations] = useState<Conversation[]>([
-    { id: "1", title: "Understanding Anxiety", createdAt: new Date(Date.now() - 86400000) },
-    { id: "2", title: "CBT Techniques", createdAt: new Date(Date.now() - 172800000) },
-    { id: "3", title: "Stress Management", createdAt: new Date(Date.now() - 259200000) },
-    { id: "4", title: "Depression Symptoms", createdAt: new Date(Date.now() - 345600000) },
-    { id: "5", title: "Sleep Psychology", createdAt: new Date(Date.now() - 432000000) },
-  ])
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>("1")
+  const [conversations, setConversations] = useState<Conversation[]>(initialConversations)
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -56,7 +53,54 @@ export function ChatInterface({ userEmail }: ChatInterfaceProps) {
     }
   }, [messages, isTyping])
 
+  const createConversation = async (firstMessage: string) => {
+    console.log("Creating conversation...");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    const { data, error } = await supabase
+      .from("conversations")
+      .insert({
+        user_id: user.id,
+        title: firstMessage.slice(0, 50),
+        model: "default",
+        source_type: "rag",
+        domain: "psychology",
+        message_count: 0,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+    console.log("Created conversation:", data);
+    return data;
+  };
+
   const handleSend = async (content: string) => {
+    if (!selectedConversationId) {
+      
+      const conversation = await createConversation(content);
+
+      setSelectedConversationId(conversation.id);
+
+      setConversations((prev) => [
+        {
+          id: conversation.id,
+          title: conversation.title,
+          createdAt: new Date(conversation.created_at),
+          updatedAt: new Date(conversation.updated_at),
+        },
+        ...prev,
+      ]);
+      
+    }
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
