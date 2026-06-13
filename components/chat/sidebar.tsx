@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Brain, Info, AlertTriangle, User, Github, Linkedin, Code } from "lucide-react"
+import { Brain, Info, AlertTriangle,  Github, Linkedin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -152,7 +152,35 @@ export function Sidebar({
                 Powered by advanced language models, it aims to make psychological knowledge 
                 more accessible while always emphasizing the importance of professional help.
               </p>
+              <div className="rounded-lg border p-3">
+                  <h4 className="font-medium mb-2">Created By</h4>
+
+                  <p className="text-sm">Faiyaz Khan</p>
+
+                  <div className="flex gap-4 mt-2">
+                    <a
+                      href="https://linkedin.com/in/faiyazkhan"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      <Linkedin className="h-4 w-4 inline mr-1" />
+                      LinkedIn
+                    </a>
+
+                    <a
+                      href="https://github.com/faiyazkhan"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      <Github className="h-4 w-4 inline mr-1" />
+                      GitHub
+                    </a>
+                  </div>
+                </div>
               <div className="rounded-lg bg-destructive/10 p-3 text-destructive">
+              
                 <p className="font-medium">Important Disclaimer</p>
                 <p className="text-xs mt-1">
                   This AI is for informational purposes only and is not a substitute for 
@@ -219,54 +247,9 @@ export function Sidebar({
 
       <Separator className="bg-sidebar-border flex-shrink-0" />
       
-      {/* Builder Info */}
-      <div className="p-4 border-t border-sidebar-border flex-shrink-0">
-        <h3 className="text-xs font-medium text-muted-foreground mb-3 flex items-center gap-1">
-          <User className="h-3 w-3" />
-          Built By
-        </h3>
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-sidebar-foreground">Faiyaz Khan</p>
-          <div className="flex gap-2">
-            <a
-              href="https://linkedin.com/in/faiyazkhan"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-sidebar-foreground transition-colors"
-            >
-              <Linkedin className="h-3.5 w-3.5" />
-              LinkedIn
-            </a>
-            <a
-              href="https://github.com/faiyazkhan"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-sidebar-foreground transition-colors"
-            >
-              <Github className="h-3.5 w-3.5" />
-              GitHub
-            </a>
-          </div>
-        </div>
-      </div>
       
-      {/* Tech Stack */}
-      <div className="p-4 border-t border-sidebar-border flex-shrink-0">
-        <h3 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-          <Code className="h-3 w-3" />
-          Tech Stack
-        </h3>
-        <div className="flex flex-wrap gap-1">
-          {["React", "Next.js", "Tailwind", "shadcn/ui"].map((tech) => (
-            <span
-              key={tech}
-              className="inline-flex items-center rounded-full bg-sidebar-accent px-2 py-0.5 text-xs text-muted-foreground"
-            >
-              {tech}
-            </span>
-          ))}
-        </div>
-      </div>
+      
+      
 
       {/* Modals */}
       <DeleteConfirmationModal
