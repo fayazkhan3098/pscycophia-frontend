@@ -83,10 +83,35 @@ export function ChatInterface({ userEmail, conversations:initialConversations }:
     return data;
   };
 
+  const saveMessage = async (
+    conversationId: string,
+    role: string,
+    content: string
+  ) => {
+    const { error } = await supabase
+      .from("messages")
+      .insert({
+        conversation_id: conversationId,
+        role,
+        content,
+        model: "default",
+        message_type: "chat",
+      });
+
+    if (error) {
+      console.error("Message save failed:", error);
+    }
+  };
+
   const handleSend = async (content: string) => {
+
+    let conversationId = selectedConversationId;
+
     if (!selectedConversationId) {
       
       const conversation = await createConversation(content);
+
+      conversationId = conversation.id;
 
       setSelectedConversationId(conversation.id);
 
@@ -101,6 +126,13 @@ export function ChatInterface({ userEmail, conversations:initialConversations }:
       ]);
       
     }
+
+    await saveMessage(
+      conversationId!,
+      "user",
+      content
+    );
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
@@ -119,6 +151,13 @@ export function ChatInterface({ userEmail, conversations:initialConversations }:
         fromCache: response.fromCache,
         feedback: null,
       }
+
+      await saveMessage(
+        conversationId!,
+        "assistant",
+        response.content
+      );
+
       setMessages((prev) => [...prev, assistantMessage])
     } catch (error) {
       setMessages((prev) => [...prev, {

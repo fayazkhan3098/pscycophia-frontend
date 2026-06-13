@@ -267,3 +267,24 @@ New Chat
 - Conversation history loading
 - Message restoration on conversation selection
 
+
+## 2026-06-13 - Message Persistence Completed
+
+### Completed
+- User messages stored in Supabase
+- Assistant responses stored in Supabase
+- Messages linked to conversations via conversation_id
+- Message persistence verified through database inspection
+
+### Verified Flow
+Create Conversation
+→ Save User Message
+→ Generate AI Response
+→ Save Assistant Message
+→ Messages Persisted In Database
+
+### Next Milestone
+- Load messages when conversation selected
+- Restore chat history after refresh
+- Sync sidebar conversation selection with loaded messages
+
