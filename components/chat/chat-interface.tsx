@@ -223,12 +223,22 @@ export function ChatInterface({ userEmail, conversations:initialConversations }:
     setMobileMenuOpen(false);
   };
 
-  const handleDeleteConversation = (id: string) => {
+  const handleDeleteConversation = async (id: string) => {
+    const { error } = await supabase
+      .from("conversations")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Delete failed:", error);
+      return;
+    }
     setConversations((prev) => prev.filter((conv) => conv.id !== id))
     if (selectedConversationId === id) {
       const remaining = conversations.filter((conv) => conv.id !== id)
       if (remaining.length > 0) {
-        setSelectedConversationId(remaining[0].id)
+        setSelectedConversationId(null)
+        setMessages([])
       } else {
         setSelectedConversationId(null)
         setMessages([])

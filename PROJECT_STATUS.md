@@ -310,3 +310,19 @@ Refresh Page
 - Persist conversation renaming
 - Update message_count automatically
 
+
+## 2026-06-13 - Conversation Deletion Completed
+
+### Completed
+- Conversation deletion from Supabase
+- Automatic message deletion via ON DELETE CASCADE
+- Sidebar updates immediately after deletion
+- Deleted active conversation returns user to empty chat state
+
+### Verified Flow
+Open Conversation
+→ Delete Conversation
+→ Conversation Removed
+→ Messages Auto Deleted
+→ Return To Empty Chat Screen
+
