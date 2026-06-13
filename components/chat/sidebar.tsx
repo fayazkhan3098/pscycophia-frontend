@@ -295,7 +295,11 @@ export function Sidebar({
         messageCount={conversationToView ? (messageCountByConversation[conversationToView.id] || 0) : 0}
       />
 
-      <ShareModal open={shareOpen} onOpenChange={setShareOpen} />
+      <ShareModal
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        conversation={conversationToShare}
+      />
     </aside>
   )
 }

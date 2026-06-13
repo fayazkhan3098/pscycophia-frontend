@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -7,14 +8,45 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import { Share2 } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import { Conversation } from "./conversation-item"
 
 interface ShareModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  conversation: Conversation | null
 }
 
-export function ShareModal({ open, onOpenChange }: ShareModalProps) {
+export function ShareModal({ open, onOpenChange, conversation }: ShareModalProps) {
+    const supabase = createClient()
+
+    const [shareUrl, setShareUrl] = useState("")
+    const [loading, setLoading] = useState(false)
+    const [copied, setCopied] = useState(false)
+
+    const generateShareLink = async () => {
+      setCopied(false)
+      if (!conversation) return
+
+      setLoading(true)
+
+      const { data, error } = await supabase
+        .from("conversations")
+        .update({ is_public: true })
+        .eq("id", conversation.id)
+        .select("share_token")
+        .single()
+
+      if (!error && data) {
+        setShareUrl(
+          `${window.location.origin}/share/${data.share_token}`
+        )
+      }
+
+      setLoading(false)
+    }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-card border-border max-w-sm">
@@ -29,24 +61,39 @@ export function ShareModal({ open, onOpenChange }: ShareModalProps) {
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="rounded-lg bg-sidebar p-4 border border-sidebar-border">
-            <p className="text-sm text-sidebar-foreground">
-              Share functionality will be connected after backend integration.
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Soon you'll be able to share conversations with others via link or email.
-            </p>
-          </div>
+          <Button
+            className="w-full"
+            onClick={generateShareLink}
+            disabled={loading || !conversation}
+          >
+            {loading ? "Generating..." : "Generate Share Link"}
+          </Button>
 
-          <div className="text-xs text-muted-foreground space-y-2">
-            <p>Planned features:</p>
-            <ul className="list-disc list-inside space-y-1 ml-1">
-              <li>Generate shareable links</li>
-              <li>Share with specific users</li>
-              <li>Control access permissions</li>
-              <li>Expiring share links</li>
-            </ul>
-          </div>
+          {shareUrl && (
+            <div className="space-y-2">
+              <input
+                readOnly
+                value={shareUrl}
+                className="w-full rounded border bg-background p-2 text-xs"
+              />
+
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={async () => {
+                  await navigator.clipboard.writeText(shareUrl)
+
+                  setCopied(true)
+
+                  setTimeout(() => {
+                    setCopied(false)
+                  }, 2000)
+                }}
+              >
+                {copied ? "Copied ✓" : "Copy Link"}
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
