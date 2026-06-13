@@ -246,15 +246,31 @@ export function ChatInterface({ userEmail, conversations:initialConversations }:
     }
   }
 
-  const handleRenameConversation = (id: string, newTitle: string) => {
+  const handleRenameConversation = async (
+    id: string,
+    newTitle: string
+  ) => {
+    const { error } = await supabase
+      .from("conversations")
+      .update({
+        title: newTitle,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Rename failed:", error);
+      return;
+    }
+
     setConversations((prev) =>
       prev.map((conv) =>
         conv.id === id
           ? { ...conv, title: newTitle, updatedAt: new Date() }
           : conv
       )
-    )
-  }
+    );
+  };
 
   const handleDuplicateConversation = (id: string) => {
     const conversation = conversations.find((c) => c.id === id)

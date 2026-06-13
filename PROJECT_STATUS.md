@@ -326,3 +326,18 @@ Open Conversation
 → Messages Auto Deleted
 → Return To Empty Chat Screen
 
+
+## 2026-06-13 - Conversation Rename Persistence Completed
+
+### Completed
+- Conversation title updates persisted to Supabase
+- Sidebar updates immediately after rename
+- Renamed conversations survive page refresh
+
+### Verified Flow
+Rename Conversation
+→ Update Database
+→ Update Sidebar
+→ Refresh Page
+→ Renamed Title Restored
+
