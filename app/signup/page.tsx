@@ -62,7 +62,7 @@ export default function SignupPage() {
         // Redirect to login after a short delay
         setTimeout(() => {
           router.push("/login");
-        }, 2000);
+        }, 5000);
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
