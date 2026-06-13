@@ -1,5 +1,17 @@
-import { ChatInterface } from "@/components/chat/chat-interface"
+import { redirect } from "next/navigation";
+import { ChatInterface } from "@/components/chat/chat-interface";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Page() {
-  return <ChatInterface />
+export default async function Page() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  return <ChatInterface />;
 }

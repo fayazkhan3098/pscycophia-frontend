@@ -1,18 +1,13 @@
-"use client";
+import { createClient } from "@/lib/supabase/server";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase/client";
+export default async function TestSupabase() {
+  const supabase = await createClient();
 
-export default function TestSupabase() {
-  const [session, setSession] = useState<any>(null);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-    });
-  }, []);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return (
-    <pre>{JSON.stringify(session, null, 2)}</pre>
+    <pre>{JSON.stringify(user, null, 2)}</pre>
   );
 }
