@@ -103,6 +103,21 @@ export function ChatInterface({ userEmail, conversations:initialConversations }:
     }
   };
 
+  const loadMessages = async (conversationId: string) => {
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Failed to load messages:", error);
+      return [];
+    }
+
+    return data;
+  };
+
   const handleSend = async (content: string) => {
 
     let conversationId = selectedConversationId;
@@ -189,11 +204,24 @@ export function ChatInterface({ userEmail, conversations:initialConversations }:
     setMobileMenuOpen(false)
   }
 
-  const handleSelectConversation = (id: string) => {
-    setSelectedConversationId(id)
-    setMessages([])
-    setMobileMenuOpen(false)
-  }
+  const handleSelectConversation = async (id: string) => {
+    setSelectedConversationId(id);
+
+    const dbMessages = await loadMessages(id);
+
+    const formattedMessages: Message[] = dbMessages.map((msg) => ({
+      id: msg.id,
+      role: msg.role,
+      content: msg.content,
+      sources: [],
+      fromCache: false,
+      feedback: null,
+    }));
+
+    setMessages(formattedMessages);
+
+    setMobileMenuOpen(false);
+  };
 
   const handleDeleteConversation = (id: string) => {
     setConversations((prev) => prev.filter((conv) => conv.id !== id))

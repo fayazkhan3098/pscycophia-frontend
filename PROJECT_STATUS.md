@@ -288,3 +288,25 @@ Create Conversation
 - Restore chat history after refresh
 - Sync sidebar conversation selection with loaded messages
 
+
+## 2026-06-13 - Message History Loading Completed
+
+### Completed
+- Messages loaded from Supabase by conversation_id
+- Messages restored when conversation selected
+- Chat history persists across page refreshes
+- Message ordering restored using created_at
+
+### Verified Flow
+Refresh Page
+→ Load Conversations
+→ Select Conversation
+→ Load Messages
+→ Restore Chat History
+
+### Next Milestone
+- Delete conversation from database
+- Delete related messages
+- Persist conversation renaming
+- Update message_count automatically
+
