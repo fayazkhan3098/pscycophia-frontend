@@ -1,6 +1,6 @@
 "use client"
 
-import { Copy, ThumbsUp, ThumbsDown, Share2, Zap } from "lucide-react"
+import { Copy, ThumbsUp, ThumbsDown, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 
@@ -34,22 +34,6 @@ export function MessageBubble({ message, onFeedback }: MessageBubbleProps) {
     })
   }
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          text: message.content,
-        })
-      } catch {
-        // User cancelled share
-      }
-    } else {
-      await navigator.clipboard.writeText(message.content)
-      toast({
-        description: "Message copied to clipboard for sharing",
-      })
-    }
-  }
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
@@ -104,15 +88,6 @@ export function MessageBubble({ message, onFeedback }: MessageBubbleProps) {
           
           {!isUser && (
             <>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                onClick={handleShare}
-              >
-                <Share2 className="h-3.5 w-3.5" />
-                <span className="sr-only">Share message</span>
-              </Button>
               <Button
                 variant="ghost"
                 size="icon"

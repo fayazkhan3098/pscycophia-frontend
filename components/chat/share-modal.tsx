@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -39,7 +39,9 @@ export function ShareModal({ open, onOpenChange, conversation }: ShareModalProps
         .select("share_token")
         .single()
 
-      if (!error && data) {
+      if (error) {
+        console.error("Share link generation failed:", error)
+      } else if (data) {
         setShareUrl(
           `${window.location.origin}/share/${data.share_token}`
         )
@@ -47,6 +49,13 @@ export function ShareModal({ open, onOpenChange, conversation }: ShareModalProps
 
       setLoading(false)
     }
+    useEffect(() => {
+      if (!open) {
+        setShareUrl("")
+        setCopied(false)
+      }
+    }, [open])
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-card border-border max-w-sm">
