@@ -13,5 +13,5 @@ export default async function Page() {
     redirect("/login");
   }
 
-  return <ChatInterface />;
+  return <ChatInterface userEmail={user.email ?? ""}/>;
 }

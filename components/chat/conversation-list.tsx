@@ -25,7 +25,7 @@ export function ConversationList({
   onViewDetails,
 }: ConversationListProps) {
   return (
-    <ScrollArea className="min-h-0 h-96 border-t border-b border-border">
+    <ScrollArea className="flex-1 border-t border-border">
       <div className="flex flex-col">
         {conversations.length === 0 ? (
           <p className="text-center text-xs text-muted-foreground py-8 px-3">

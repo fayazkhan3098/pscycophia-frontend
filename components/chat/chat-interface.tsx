@@ -28,7 +28,11 @@ const getAIResponse = async (question: string) => {
   }
 }
 
-export function ChatInterface() {
+interface ChatInterfaceProps {
+  userEmail: string
+}
+
+export function ChatInterface({ userEmail }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [isTyping, setIsTyping] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -151,6 +155,7 @@ export function ChatInterface() {
       {!sidebarCollapsed && (
         <Sidebar
           className="hidden md:flex"
+          userEmail={userEmail}
           conversations={conversations}
           selectedConversationId={selectedConversationId}
           onNewChat={handleNewChat}
@@ -239,6 +244,7 @@ export function ChatInterface() {
         <SheetContent side="left" className="w-72 p-0 bg-sidebar border-sidebar-border">
           <Sidebar
             className="flex md:hidden"
+            userEmail={userEmail}
             conversations={conversations}
             selectedConversationId={selectedConversationId}
             onNewChat={handleNewChat}

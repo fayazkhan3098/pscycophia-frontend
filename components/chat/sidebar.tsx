@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { Brain, Info, AlertTriangle,  Github, Linkedin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,6 +24,7 @@ import { ShareModal } from "./share-modal"
 
 interface SidebarProps {
   className?: string
+  userEmail: string
   conversations?: Conversation[]
   selectedConversationId?: string | null
   onNewChat?: () => void
@@ -43,6 +46,7 @@ const MOCK_CONVERSATIONS: Conversation[] = [
 
 export function Sidebar({
   className,
+  userEmail,
   conversations = MOCK_CONVERSATIONS,
   selectedConversationId,
   onNewChat,
@@ -53,6 +57,8 @@ export function Sidebar({
   onShareConversation,
   messageCountByConversation = {},
 }: SidebarProps) {
+  const router = useRouter()
+  const supabase = createClient()
   const [aboutOpen, setAboutOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
@@ -106,6 +112,11 @@ export function Sidebar({
     }
   }
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push("/login")
+    router.refresh()
+  }
   return (
     <aside className={cn(
       "flex flex-col w-72 flex-shrink-0 bg-sidebar border-r border-sidebar-border min-h-0 overflow-y-auto",
@@ -246,10 +257,28 @@ export function Sidebar({
       </div>
 
       <Separator className="bg-sidebar-border flex-shrink-0" />
-      
-      
-      
-      
+
+      <div className="p-4 flex-shrink-0">
+        <div className="rounded-lg border border-sidebar-border p-3">
+          <p className="text-xs text-muted-foreground mb-1">
+            Account
+          </p>
+
+          <p className="text-sm text-sidebar-foreground break-all">
+            {userEmail}
+          </p>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-3 w-full"
+          onClick={handleLogout}
+        >
+          Logout
+        </Button>
+
+        </div>
+      </div>
 
       {/* Modals */}
       <DeleteConfirmationModal
