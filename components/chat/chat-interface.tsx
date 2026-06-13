@@ -12,6 +12,7 @@ import { TypingIndicator } from "./typing-indicator"
 import { SuggestedQuestions } from "./suggested-questions"
 import { type Conversation } from "./conversation-item"
 import { createClient } from "@/lib/supabase/client"
+import { FeedbackDialog } from "./feedback-dialog";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -43,6 +44,9 @@ export function ChatInterface({ userEmail, conversations:initialConversations }:
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations)
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  const [selectedRating, setSelectedRating] = useState<"up" | "down">("up");
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -88,7 +92,7 @@ export function ChatInterface({ userEmail, conversations:initialConversations }:
     role: string,
     content: string
   ) => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("messages")
       .insert({
         conversation_id: conversationId,
@@ -96,10 +100,44 @@ export function ChatInterface({ userEmail, conversations:initialConversations }:
         content,
         model: "default",
         message_type: "chat",
-      });
+      })
+      .select()
+      .single();
 
     if (error) {
       console.error("Message save failed:", error);
+      return null;
+    }
+
+    return data;
+  };
+
+  const saveFeedback = async (
+    messageId: string,
+    conversationId: string,
+    rating: string,
+    categories: string[],
+    comment?: string
+  ) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { error } = await supabase
+      .from("message_feedback")
+      .insert({
+        message_id: messageId,
+        conversation_id: conversationId,
+        user_id: user?.id,
+        rating,
+        feedback_categories: categories,
+        comments: comment || null,
+      });
+
+    if (error) {
+      console.error("Feedback save failed:", error);
+    } else {
+      console.log("Feedback saved");
     }
   };
 
@@ -142,14 +180,14 @@ export function ChatInterface({ userEmail, conversations:initialConversations }:
       
     }
 
-    await saveMessage(
+    const savedUserMessage = await saveMessage(
       conversationId!,
       "user",
       content
     );
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: savedUserMessage.id,
       role: "user",
       content,
     }
@@ -158,20 +196,20 @@ export function ChatInterface({ userEmail, conversations:initialConversations }:
 
     try {
       const response = await getAIResponse(content)
+      const savedAssistantMessage = await saveMessage(
+        conversationId!,
+        "assistant",
+        response.content
+      );
+
       const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: savedAssistantMessage.id,
         role: "assistant",
         content: response.content,
         sources: response.sources,
         fromCache: response.fromCache,
         feedback: null,
       }
-
-      await saveMessage(
-        conversationId!,
-        "assistant",
-        response.content
-      );
 
       setMessages((prev) => [...prev, assistantMessage])
     } catch (error) {
@@ -188,13 +226,25 @@ export function ChatInterface({ userEmail, conversations:initialConversations }:
     }
   }
 
-  const handleFeedback = (id: string, feedback: "up" | "down") => {
+  const handleFeedback = (
+    id: string,
+    feedback: "up" | "down"
+  ) => {
+    setSelectedMessageId(id);
+    setSelectedRating(feedback);
+    setFeedbackDialogOpen(true);
+
     setMessages((prev) =>
       prev.map((msg) =>
-        msg.id === id ? { ...msg, feedback: msg.feedback === feedback ? null : feedback } : msg
+        msg.id === id
+          ? {
+              ...msg,
+              feedback,
+            }
+          : msg
       )
-    )
-  }
+    );
+  };
 
   const handleNewChat = () => {
     // Clear messages and prepare for new conversation
@@ -391,6 +441,28 @@ export function ChatInterface({ userEmail, conversations:initialConversations }:
             onDuplicateConversation={handleDuplicateConversation}
           />
         </SheetContent>
+
+        <FeedbackDialog
+          open={feedbackDialogOpen}
+          onOpenChange={setFeedbackDialogOpen}
+          rating={selectedRating}
+          onSkip={() => {
+            console.log("Feedback skipped");
+            setFeedbackDialogOpen(false);
+          }}
+          onSubmit={async (categories, comment) => {
+            await saveFeedback(
+              selectedMessageId!,
+              selectedConversationId!,
+              selectedRating,
+              categories,
+              comment
+            );
+
+            setFeedbackDialogOpen(false);
+          }}
+        />
+
       </Sheet>
     </div>
   )

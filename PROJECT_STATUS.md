@@ -341,3 +341,34 @@ Rename Conversation
 → Refresh Page
 → Renamed Title Restored
 
+## 2026-06-13
+
+### Phase 6D - Feedback Persistence Completed
+
+Implemented end-to-end user feedback collection.
+
+Features:
+- Thumbs up/down feedback on assistant messages
+- Feedback dialog with optional comments
+- Category selection chips/snippets
+- Skip feedback option
+- Feedback persisted in Supabase
+- RLS policy configured
+- User association via auth user id
+
+Table:
+message_feedback
+
+Fields:
+- id
+- message_id
+- conversation_id
+- user_id
+- rating
+- feedback_categories
+- comments
+- created_at
+
+Status:
+Completed and verified through UI and database validation.
+
